@@ -5,7 +5,10 @@ cmake_minimum_required(VERSION 3.21)
 project(QCefView)
 
 set(CMAKE_FOLDER "QCefView")
-
+set(QT_SDK_DIR
+  # Change this value to the Qt SDK path of your build environment
+  "D:/ps/qt-5.15.13-msvc2019"
+)
 # arguments:
 # CEF_SDK_VERSION:
 # - specify the CEF version to be used,
@@ -211,6 +214,7 @@ add_subdirectory(src)
 # ##############################################################
 if(BUILD_DEMO)
   add_subdirectory(example/QCefViewTest)
+  add_subdirectory(example/QCefSimX)
 endif()
 
 # ##############################################################
