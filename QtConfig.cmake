@@ -9,7 +9,7 @@
 # 
 set(QT_SDK_DIR
   # Change this value to the Qt SDK path of your build environment
-  "$ENV{QTDIR}"
+  "D:/ps/qt-5.15.13-msvc2019"
 )
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!NOTE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

@@ -162,6 +162,7 @@ add_subdirectory(src)
 # ##############################################################
 if(BUILD_DEMO)
   add_subdirectory(example/QCefViewTest)
+  add_subdirectory(example/QCefSimX)
 endif()
 
 # ##############################################################
