@@ -22,6 +22,7 @@
 #include <QCefEvent.h>
 #include <QCefQuery.h>
 #include <QCefSetting.h>
+#include <QMutex>
 
 /// <summary>
 /// Type alias for CEF browser id
@@ -522,6 +523,10 @@ protected:
   /// <param name="event"></param>
   /// <returns></returns>
   bool event(QEvent* event) override;
+
+private:
+  QHash<void*, QSharedPointer<QCefDownloadItem>> m_activeDownloads_;
+  QMutex m_activeDownloadsMutex_;
 #pragma endregion
 };
 

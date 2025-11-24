@@ -13,6 +13,11 @@
 #include "details/QCefEventPrivate.h"
 #include "details/QCefViewPrivate.h"
 #include "details/utils/CommonUtils.h"
+#include <qmessagebox.h>
+#include <qstandardpaths.h>
+#include <QDir>
+#include <qfiledialog.h>
+#include <qprocess.h>
 
 #if CEF_VERSION_MAJOR < 122
 const QCefFrameId QCefView::MainFrameID = 0;
@@ -332,15 +337,158 @@ QCefView::onNewPopup(const QCefFrameId& frameId,
 {
   return false;
 }
+// 顶部静态状态（或移动到类成员）
+static QSet<void*> g_handledByPointer;
+static QSet<QString> g_handledBySuggestedName;
+static QMutex g_handledMutex;
+static QHash<void*, QSharedPointer<QCefDownloadItem>> g_activeDownloads;
+static QMutex g_activeDownloadsMutex;
 
 void
 QCefView::onNewDownloadItem(const QSharedPointer<QCefDownloadItem>& item, const QString& suggestedName)
 {
+  if (!item)
+    return;
+
+  void* ptrKey = item.data();
+  QString nameKey = suggestedName.isEmpty() ? QString() : suggestedName;
+
+  // Debug 输出，方便排查（把这段保留并贴到日志来）
+  qDebug() << "onNewDownloadItem called. ptr=" << ptrKey << ", suggestedName=" << nameKey
+           << ", thread=" << QThread::currentThread();
+
+  // 第一层：以指针去重（同一实例）
+  {
+    QMutexLocker locker(&g_handledMutex);
+    if (g_handledByPointer.contains(ptrKey)) {
+      qDebug() << "-> ignored by pointer (already handled):" << ptrKey;
+      return;
+    }
+    // 第二层：以 suggestedName 去重（同名文件来自同一次下载的可能性）
+    if (!nameKey.isEmpty() && g_handledBySuggestedName.contains(nameKey)) {
+      qDebug() << "-> ignored by suggestedName (already handled):" << nameKey;
+      // 仍然插入 pointer 标记以避免后续重复处理
+      g_handledByPointer.insert(ptrKey);
+      return;
+    }
+
+    // 先标记为 handled，防止并发重复弹窗
+    g_handledByPointer.insert(ptrKey);
+    if (!nameKey.isEmpty())
+      g_handledBySuggestedName.insert(nameKey);
+  }
+
+  // Helper：开始下载并把引用保留
+  auto doStart = [ptrKey, item](const QString& fullPath) {
+    if (fullPath.isEmpty()) {
+      // caller will handle cancellation
+      return;
+    }
+    item->start(fullPath);
+    QMutexLocker locker(&g_activeDownloadsMutex);
+    g_activeDownloads.insert(ptrKey, item);
+    qDebug() << "-> started download for ptr=" << ptrKey << " to " << fullPath;
+  };
+
+  // UI dialog lambda，需要在 lambda 中能访问 ptrKey 和 nameKey 以便用户取消时恢复标记
+  auto showSaveDialogOnUiThread = [ptrKey, nameKey, doStart]() {
+    QString defaultNameLocal =
+      nameKey.isEmpty() ? QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss") + ".download" : nameKey;
+    QString defaultDir = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
+    if (defaultDir.isEmpty())
+      defaultDir = QDir::homePath();
+    QString defaultPath = QDir(defaultDir).filePath(defaultNameLocal);
+    doStart(defaultPath);
+    //QString savePath =
+    //  QFileDialog::getSaveFileName(nullptr, QObject::tr("保存文件为"), defaultPath, QStringLiteral("*.*"));
+    //if (!savePath.isEmpty()) {
+    //  doStart(defaultPath);
+    //} else {
+    //  qDebug() << "-> user canceled save dialog for ptr=" << ptrKey;
+    //  // 用户取消：撤销 handled 标记，允许后续重新触发（例如后续 onNewDownloadItem 再来一次时）
+    //  QMutexLocker locker(&g_handledMutex);
+    //  g_handledByPointer.remove(ptrKey);
+    //  if (!nameKey.isEmpty())
+    //    g_handledBySuggestedName.remove(nameKey);
+    //}
+  };
+
+  // 若当前为 UI 线程则直接显示，否则用 invokeMethod 切回 UI 线程
+  if (QThread::currentThread() == qApp->thread()) {
+    showSaveDialogOnUiThread();
+  } else {
+    QMetaObject::invokeMethod(qApp, showSaveDialogOnUiThread, Qt::QueuedConnection);
+  }
 }
 
 void
 QCefView::onUpdateDownloadItem(const QSharedPointer<QCefDownloadItem>& item)
 {
+  if (!item)
+    return;
+  void* ptrKey = item.data();
+
+  // Debug 输出
+  qDebug() << "onUpdateDownloadItem called. ptr=" << ptrKey << ", thread=" << QThread::currentThread();
+
+  if (item->isInProgress()) {
+    int pct = item->percentComplete();
+    if (pct >= 0)
+      qDebug() << "-> downloading" << item->fullPath() << pct << "%";
+    else
+      qDebug() << "-> downloading (unknown size) " << item->fullPath();
+  } else if (item->isComplete()) {
+    qDebug() << "-> download complete:" << item->fullPath();
+    {
+      QMutexLocker locker(&g_activeDownloadsMutex);
+      g_activeDownloads.remove(ptrKey);
+    }
+    {
+      QMutexLocker locker(&g_handledMutex);
+      g_handledByPointer.remove(ptrKey);
+      // 不能安全地移除 suggestedName（不知道是谁占用），但我们也可以尝试根据 fullPath 解析名字并移除：
+      QString fname = QFileInfo(item->fullPath()).fileName();
+      if (!fname.isEmpty())
+        g_handledBySuggestedName.remove(fname);
+    }
+    QMetaObject::invokeMethod(
+      qApp,
+      [path = item->fullPath()]() {
+        QString program = "explorer.exe";
+        QStringList arguments;
+        arguments << "/select," + QDir::toNativeSeparators(path);
+        QProcess::startDetached(program, arguments);
+
+      },
+      Qt::QueuedConnection);
+  } else if (item->isCanceled()) {
+    qDebug() << "-> download cancelled:" << item->fullPath();
+    {
+      QMutexLocker locker(&g_activeDownloadsMutex);
+      g_activeDownloads.remove(ptrKey);
+    }
+    {
+      QMutexLocker locker(&g_handledMutex);
+      g_handledByPointer.remove(ptrKey);
+    }
+  } else {
+    QString err = item->contentDisposition();
+    if (!err.isEmpty()) {
+      qDebug() << "-> download error:" << err << " path:" << item->fullPath();
+      {
+        QMutexLocker locker(&g_activeDownloadsMutex);
+        g_activeDownloads.remove(ptrKey);
+      }
+      {
+        QMutexLocker locker(&g_handledMutex);
+        g_handledByPointer.remove(ptrKey);
+      }
+      QMetaObject::invokeMethod(
+        qApp,
+        [err]() { QMessageBox::warning(nullptr, QObject::tr("下载失败"), QObject::tr("下载失败：%1").arg(err)); },
+        Qt::QueuedConnection);
+    }
+  }
 }
 
 bool
