@@ -22,6 +22,7 @@
  * - zbzddlyl:  装备最大利用率（默认0.00）
  * - rymzl:     人员满足率（默认0.00）
  * - zbmzl:     装备满足率（默认0.00）
+ * - sfyc:      算法预测JSON（存储算法预测结果的JSON字符串）
  * - create_time: 创建时间
  * - update_time: 更新时间
  */
@@ -234,6 +235,25 @@ public:
      */
     bool updateRateFields(const QString& jsonStr);
 
+    /**
+     * @brief 更新算法预测JSON字段
+     *
+     * 入参JSON结构：
+     * {
+     *   "id": "20251108232312345678ABC",  // 要更新的记录ID（必填）
+     *   "sfyc": "{...}"                   // 算法预测JSON字符串（必填）
+     * }
+     *
+     * 说明：
+     * - id 字段必须提供
+     * - sfyc 为算法预测结果的JSON字符串
+     * - update_time 会自动更新
+     *
+     * @param jsonStr - JSON格式的更新数据（必须包含id和sfyc字段）
+     * @return bool - true: 更新成功, false: 更新失败
+     */
+    bool updatePredictionField(const QString& jsonStr);
+
 private:
     ScenarioModel();
     ScenarioModel(const ScenarioModel&) = delete;
@@ -243,7 +263,8 @@ private:
     QJsonObject recordToJson(const QString& id, const QString& xdmc, const QString& jc,
                              const QString& zt, const QString& xdms,
                              const QString& kssj, const QString& jssj,
-                             double ryzddlyl, double zbzddlyl, double rymzl, double zbmzl);
+                             double ryzddlyl, double zbzddlyl, double rymzl, double zbmzl,
+                             const QString& sfyc);
 
     static std::unique_ptr<ScenarioModel> _instance;
     static std::mutex _mutex;

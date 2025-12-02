@@ -452,6 +452,14 @@ WebSocketServer::updateScenarioRateFieldsReq(QString json)
         });
 }
 
+void
+WebSocketServer::updateScenarioPredictionReq(QString json)
+{
+    QTimer::singleShot(50, [this, json] {
+        emit updateScenarioPrediction(ScenarioModel::Instance().updatePredictionField(json));
+        });
+}
+
 // AircraftEntity implementation
 void
 WebSocketServer::queryAircraftEntityReq()

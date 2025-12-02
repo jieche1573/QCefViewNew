@@ -157,6 +157,7 @@ signals:
     void queryScenarioByStatus(QString json);
     void queryScenarioByAirport(QString json);
     void updateScenarioRateFields(bool ok);
+    void updateScenarioPrediction(bool ok);
   public slots:
     void queryScenarioReq();
     void queryScenarioAddReq(QString json);
@@ -167,6 +168,7 @@ signals:
     void queryScenarioByStatusReq(QString status);
     void queryScenarioByAirportReq(QString airport);
     void updateScenarioRateFieldsReq(QString json);
+    void updateScenarioPredictionReq(QString json);
 
 //scenario --end--
 
