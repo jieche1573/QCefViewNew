@@ -5,6 +5,8 @@ project(${PROJECT_NAME})
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+# 确保不将警告视为错误
+set(CMAKE_COMPILE_WARNING_AS_ERROR OFF)
 
 	# 在VS中将生成文件分组显示（可选）
 source_group("Generated\\MOC" FILES ${CMAKE_AUTOMOC_OUTPUT_DIRECTORY}/*)
@@ -146,10 +148,6 @@ if(OS_WINDOWS)
 
 
 
-    # Copy the Oracle dependent libs
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_CURRENT_SOURCE_DIR}/win7/
-    $<TARGET_FILE_DIR:${PROJECT_NAME}>/
 
 
     # Deploy the Qt Application

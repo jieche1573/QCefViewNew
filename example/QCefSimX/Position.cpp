@@ -1,4 +1,4 @@
-#include "Position.h"
+﻿#include "Position.h"
 #include "sqlite.h"
 #include <QJsonDocument>
 #include <QJsonObject>
