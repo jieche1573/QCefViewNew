@@ -1,4 +1,4 @@
-#include "SparePart.h"
+﻿#include "SparePart.h"
 #include "sqlite.h"
 #include <QJsonDocument>
 #include <QJsonObject>
