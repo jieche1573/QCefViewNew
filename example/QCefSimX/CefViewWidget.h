@@ -15,6 +15,10 @@ public:
 
   ~CefViewWidget();
 
+  void onNewDownloadItem(const QSharedPointer<QCefDownloadItem>& item, const QString& suggestedName) override;
+
+  void onUpdateDownloadItem(const QSharedPointer<QCefDownloadItem>& item) override;
+
   virtual void onBrowserWindowCreated(QWindow* win);
 
   virtual void resizeEvent(QResizeEvent* event);

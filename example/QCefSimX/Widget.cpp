@@ -1,4 +1,5 @@
 ﻿#include "Widget.h"
+#include "CefViewWidget.h"
 
 #include "iconhelper.h"
 #include "quihelper.h"
@@ -45,7 +46,7 @@ Widget::Widget(QWidget* parent)
   QDir dir = QCoreApplication::applicationDirPath();
   QString htmlPath = QString("file://") + QDir::toNativeSeparators(dir.filePath("dist/index.html"));
 
-  m_cefView = new QCefView(htmlPath, &settings, this);
+  m_cefView = new CefViewWidget(htmlPath, &settings, this);
   // m_cefView->setDisablePopupContextMenu(true);
   ui->widget_main->setLayout(new QHBoxLayout(this));
   ui->widget_main->layout()->addWidget(m_cefView);
