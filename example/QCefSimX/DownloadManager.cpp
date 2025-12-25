@@ -1,6 +1,8 @@
 ﻿#include "DownloadManager.h"
 
 #include <QDebug>
+#include <qprocess.h>
+#include <qdir.h>
 
 DownloadManager&
 DownloadManager::getInstance()
@@ -36,9 +38,16 @@ DownloadManager::UpdateDownloadItem(const QSharedPointer<QCefDownloadItem>& item
            << "\n"
            << "  canceled: " << item->isCanceled() << "\n"
            << "  complete: " << item->isComplete();
-
+  if (item->isComplete()) {
+    QString program = "explorer.exe";
+    QStringList arguments;
+    arguments << "/select," + QDir::toNativeSeparators(item->fullPath());
+    QProcess::startDetached(program, arguments);
+  }
   if (item->isCanceled() || item->isComplete())
     m_mapDownloadingItem.remove(item->id());
+
+  
 }
 
 DownloadManager::DownloadManager() {}
