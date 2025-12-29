@@ -10,6 +10,8 @@
 #include "savelog.h"
 
 #include <QFile>
+#include <QLocalSocket>
+#include <QLocalServer>
 
 int
 main(int argc, char* argv[])
@@ -23,6 +25,23 @@ main(int argc, char* argv[])
   QApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::PassThrough);
   QApplication a(argc, argv);
     a.setWindowIcon(QIcon(":/qss/blacksoft/data.ico"));
+
+      const QString serverName = "MyQtSingleInstanceApp";
+
+      QLocalSocket socket;
+      socket.connectToServer(serverName);
+
+      // 如果能连上，说明已经有实例
+      if (socket.waitForConnected(500)) {
+        QUIHelper::showMessageBoxInfo( "程序已经在运行中，请勿重复启动！",3);
+        return 0;
+      }
+
+      // 第一个实例：创建本地服务
+      QLocalServer server;
+      QLocalServer::removeServer(serverName); // 防止异常退出残留
+      server.listen(serverName);
+
   AppInit::Instance()->start();
 
   QUIHelper::setFont();
