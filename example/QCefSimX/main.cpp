@@ -17,6 +17,10 @@ main(int argc, char* argv[])
   //QApplication a(argc, argv);
 
     QUIHelper::initMain();
+  // 1. 启用Qt高DPI支持
+  QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+  QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
+  QApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::PassThrough);
   QApplication a(argc, argv);
     a.setWindowIcon(QIcon(":/qss/blacksoft/data.ico"));
   AppInit::Instance()->start();
