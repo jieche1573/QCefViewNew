@@ -37,8 +37,10 @@ bool ScenarioModel::initTable()
             jssj TEXT,
             ryzddlyl REAL DEFAULT 0.00,
             zbzddlyl REAL DEFAULT 0.00,
+            bjzddlyl REAL DEFAULT 0.00,
             rymzl REAL DEFAULT 0.00,
             zbmzl REAL DEFAULT 0.00,
+            bjmzl REAL DEFAULT 0.00,
             sfyc TEXT,
             create_time TEXT,
             update_time TEXT
@@ -54,18 +56,22 @@ bool ScenarioModel::initTable()
         // 检查是否需要添加新字段(用于已存在的表)
         QString alterSQL1 = "ALTER TABLE scenario ADD COLUMN ryzddlyl REAL DEFAULT 0.00";
         QString alterSQL2 = "ALTER TABLE scenario ADD COLUMN zbzddlyl REAL DEFAULT 0.00";
-        QString alterSQL3 = "ALTER TABLE scenario ADD COLUMN rymzl REAL DEFAULT 0.00";
-        QString alterSQL4 = "ALTER TABLE scenario ADD COLUMN zbmzl REAL DEFAULT 0.00";
+        QString alterSQL3 = "ALTER TABLE scenario ADD COLUMN bjzddlyl REAL DEFAULT 0.00";
+        QString alterSQL4 = "ALTER TABLE scenario ADD COLUMN rymzl REAL DEFAULT 0.00";
+        QString alterSQL5 = "ALTER TABLE scenario ADD COLUMN zbmzl REAL DEFAULT 0.00";
+        QString alterSQL6 = "ALTER TABLE scenario ADD COLUMN bjmzl REAL DEFAULT 0.00";
 
         // 尝试添加新字段(如果字段已存在会失败,但不影响)
         SQLite::Instance().execSQL(alterSQL1);
         SQLite::Instance().execSQL(alterSQL2);
         SQLite::Instance().execSQL(alterSQL3);
         SQLite::Instance().execSQL(alterSQL4);
+        SQLite::Instance().execSQL(alterSQL5);
+        SQLite::Instance().execSQL(alterSQL6);
 
         // 添加算法预测字段
-        QString alterSQL5 = "ALTER TABLE scenario ADD COLUMN sfyc TEXT";
-        SQLite::Instance().execSQL(alterSQL5);
+        QString alterSQL7 = "ALTER TABLE scenario ADD COLUMN sfyc TEXT";
+        SQLite::Instance().execSQL(alterSQL7);
     }
     else
     {
@@ -205,8 +211,10 @@ bool ScenarioModel::updateRateFields(const QString& jsonStr)
 
     if (jsonObj.contains("ryzddlyl")) data["ryzddlyl"] = jsonObj["ryzddlyl"].toDouble();
     if (jsonObj.contains("zbzddlyl")) data["zbzddlyl"] = jsonObj["zbzddlyl"].toDouble();
+    if (jsonObj.contains("bjzddlyl")) data["bjzddlyl"] = jsonObj["bjzddlyl"].toDouble();
     if (jsonObj.contains("rymzl")) data["rymzl"] = jsonObj["rymzl"].toDouble();
     if (jsonObj.contains("zbmzl")) data["zbmzl"] = jsonObj["zbmzl"].toDouble();
+    if (jsonObj.contains("bjmzl")) data["bjmzl"] = jsonObj["bjmzl"].toDouble();
 
     data["update_time"] = currentTime;
 
@@ -264,8 +272,10 @@ QString ScenarioModel::queryRecordById(const QString& id)
             query.value("jssj").toString(),
             query.value("ryzddlyl").toDouble(),
             query.value("zbzddlyl").toDouble(),
+            query.value("bjzddlyl").toDouble(),
             query.value("rymzl").toDouble(),
             query.value("zbmzl").toDouble(),
+            query.value("bjmzl").toDouble(),
             query.value("sfyc").toString()
         );
 
@@ -297,8 +307,10 @@ QString ScenarioModel::queryAllRecords()
             query.value("jssj").toString(),
             query.value("ryzddlyl").toDouble(),
             query.value("zbzddlyl").toDouble(),
+            query.value("bjzddlyl").toDouble(),
             query.value("rymzl").toDouble(),
             query.value("zbmzl").toDouble(),
+            query.value("bjmzl").toDouble(),
             query.value("sfyc").toString()
         );
 
@@ -334,8 +346,10 @@ QString ScenarioModel::queryByName(const QString& name)
             query.value("jssj").toString(),
             query.value("ryzddlyl").toDouble(),
             query.value("zbzddlyl").toDouble(),
+            query.value("bjzddlyl").toDouble(),
             query.value("rymzl").toDouble(),
             query.value("zbmzl").toDouble(),
+            query.value("bjmzl").toDouble(),
             query.value("sfyc").toString()
         );
 
@@ -371,8 +385,10 @@ QString ScenarioModel::queryByStatus(const QString& status)
             query.value("jssj").toString(),
             query.value("ryzddlyl").toDouble(),
             query.value("zbzddlyl").toDouble(),
+            query.value("bjzddlyl").toDouble(),
             query.value("rymzl").toDouble(),
             query.value("zbmzl").toDouble(),
+            query.value("bjmzl").toDouble(),
             query.value("sfyc").toString()
         );
 
@@ -408,8 +424,10 @@ QString ScenarioModel::queryByAirport(const QString& airport)
             query.value("jssj").toString(),
             query.value("ryzddlyl").toDouble(),
             query.value("zbzddlyl").toDouble(),
+            query.value("bjzddlyl").toDouble(),
             query.value("rymzl").toDouble(),
             query.value("zbmzl").toDouble(),
+            query.value("bjmzl").toDouble(),
             query.value("sfyc").toString()
         );
 
@@ -430,7 +448,8 @@ QString ScenarioModel::queryByAirport(const QString& airport)
 QJsonObject ScenarioModel::recordToJson(const QString& id, const QString& xdmc, const QString& jc,
                                         const QString& zt, const QString& xdms,
                                         const QString& kssj, const QString& jssj,
-                                        double ryzddlyl, double zbzddlyl, double rymzl, double zbmzl,
+                                        double ryzddlyl, double zbzddlyl, double bjzddlyl,
+                                        double rymzl, double zbmzl, double bjmzl,
                                         const QString& sfyc)
 {
     QJsonObject obj;
@@ -443,8 +462,10 @@ QJsonObject ScenarioModel::recordToJson(const QString& id, const QString& xdmc, 
     obj["jssj"] = jssj;     // 结束时间
     obj["ryzddlyl"] = ryzddlyl;  // 人员最大利用率
     obj["zbzddlyl"] = zbzddlyl;  // 装备最大利用率
+    obj["bjzddlyl"] = bjzddlyl;  // 备件最大利用率
     obj["rymzl"] = rymzl;        // 人员满足率
     obj["zbmzl"] = zbmzl;        // 装备满足率
+    obj["bjmzl"] = bjmzl;        // 备件满足率
     obj["sfyc"] = sfyc;          // 算法预测JSON
     return obj;
 }

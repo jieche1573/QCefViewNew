@@ -20,8 +20,10 @@
  * - jssj:      结束时间
  * - ryzddlyl:  人员最大利用率（默认0.00）
  * - zbzddlyl:  装备最大利用率（默认0.00）
+ * - bjzddlyl:  备件最大利用率（默认0.00）
  * - rymzl:     人员满足率（默认0.00）
  * - zbmzl:     装备满足率（默认0.00）
+ * - bjmzl:     备件满足率（默认0.00）
  * - sfyc:      算法预测JSON（存储算法预测结果的JSON字符串）
  * - create_time: 创建时间
  * - update_time: 更新时间
@@ -220,8 +222,10 @@ public:
      *   "id": "20251108232312345678ABC",  // 要更新的记录ID（必填）
      *   "ryzddlyl": 0.85,                 // 人员最大利用率（选填）
      *   "zbzddlyl": 0.92,                 // 装备最大利用率（选填）
+     *   "bjzddlyl": 0.66,                 // 备件最大利用率（选填）
      *   "rymzl": 0.78,                    // 人员满足率（选填）
-     *   "zbmzl": 0.88                     // 装备满足率（选填）
+     *   "zbmzl": 0.88,                    // 装备满足率（选填）
+     *   "bjmzl": 0.75                     // 备件满足率（选填）
      * }
      *
      * 说明：
@@ -263,7 +267,8 @@ private:
     QJsonObject recordToJson(const QString& id, const QString& xdmc, const QString& jc,
                              const QString& zt, const QString& xdms,
                              const QString& kssj, const QString& jssj,
-                             double ryzddlyl, double zbzddlyl, double rymzl, double zbmzl,
+                             double ryzddlyl, double zbzddlyl, double bjzddlyl,
+                             double rymzl, double zbmzl, double bjmzl,
                              const QString& sfyc);
 
     static std::unique_ptr<ScenarioModel> _instance;
